@@ -35,14 +35,16 @@ class layer_norm(torch.autograd.Function):
         x = ctx.layer_norm_input
         mean, rstd, weight, M, N = ctx.layer_norm_parameters
 
-        output_mask = [True, True, True]
+        #output_mask = [True, True, True]
+        output_mask = ctx.needs_input_grad #[True, True, True]
+        print(output_mask)
         if grad_output.is_cuda:
             grad_input, grad_weight, grad_bias = native.layer_norm_backward_cuda(grad_output, x, mean, rstd, weight, M, N, output_mask)
         else:
             grad_input, grad_weight, grad_bias = native.layer_norm_backward_cpu(grad_output, x, mean, rstd, weight, M, N, output_mask)
         ctx.layer_norm_input = None
         ctx.layer_norm_parameters = None
-        return grad_input, None, grad_weight, grad_bias, None, None, None, None
+        return grad_input, None, grad_weight, grad_bias, None, None
 
 class LayerNorm(nn.LayerNorm):
     def __init__(self, normalized_shape, eps=1e-05, elementwise_affine=True):
